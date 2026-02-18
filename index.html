@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อสอบสิ่งแวดล้อมและการจัดการทรัพยากร (พร้อมเฉลย)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; color: #333; max-width: 850px; margin: 0 auto; padding: 20px; }
+        h1, h2 { text-align: center; color: #2c3e50; }
+        .section-header { background-color: #27ae60; color: white; padding: 15px; border-radius: 8px; margin-top: 30px; font-size: 1.2em; font-weight: bold; }
+        .question-box { background: white; padding: 25px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid #bdc3c7; }
+        .question-text { font-weight: bold; font-size: 1.15em; margin-bottom: 15px; color: #2c3e50; }
+        
+        .choices label { display: block; padding: 10px; margin: 5px 0; cursor: pointer; border-radius: 6px; border: 1px solid #eee; transition: all 0.2s; }
+        .choices label:hover { background-color: #e8f8f5; border-color: #27ae60; }
+        input[type="radio"] { margin-right: 12px; transform: scale(1.2); }
+        
+        textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid #ccc; border-radius: 6px; margin-top: 10px; font-family: 'Sarabun'; font-size: 1em; }
+        
+        .btn-submit { display: block; width: 100%; padding: 18px; background-color: #2980b9; color: white; border: none; border-radius: 8px; font-size: 1.3em; font-weight: bold; cursor: pointer; margin-top: 30px; transition: background 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-submit:hover { background-color: #3498db; }
+        
+        /* Styles for Result & Answer Key */
+        .result-box { display: none; background-color: #ffffff; padding: 30px; border: 3px solid #2980b9; border-radius: 10px; margin-top: 30px; text-align: center; font-size: 1.2em; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .score-big { font-size: 2.5em; font-weight: bold; color: #2980b9; display: block; margin: 10px 0; }
+        
+        .feedback { margin-top: 15px; padding: 15px; border-radius: 6px; display: none; font-size: 1em; line-height: 1.6; }
+        .correct-answer-box { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .wrong-answer-box { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .guideline-box { background-color: #e2e3e5; border: 1px solid #d6d8db; color: #383d41; }
+        
+        .key-label { font-weight: bold; text-decoration: underline; }
+        
+        /* Highlight selected choices after submit */
+        .user-selected { font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>ข้อสอบวัดผลสัมฤทธิ์ทางการเรียน</h1>
+    <h2>วิชา: สิ่งแวดล้อมและการจัดการทรัพยากร</h2>
+    <div style="text-align: center; background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+        <p><strong>คะแนนเต็ม 60 คะแนน</strong></p>
+        <p style="font-size: 0.9em; color: #666;">(ตอนที่ 1: 30 คะแนน | ตอนที่ 2: 10 คะแนน | ตอนที่ 3: 20 คะแนน)</p>
+    </div>
+
+    <form id="examForm">
+        <div class="section-header">ตอนที่ 1: ปรนัย (เลือกตอบ) 30 ข้อ</div>
+        <div id="part1-container"></div>
+
+        <div class="section-header">ตอนที่ 2: ถูก/ผิด 10 ข้อ</div>
+        <div id="part2-container"></div>
+
+        <div class="section-header">ตอนที่ 3: อัตนัย (ข้อเขียน) 4 ข้อ</div>
+        <div id="part3-container"></div>
+
+        <button type="button" class="btn-submit" onclick="checkAnswers()">ส่งคำตอบ & ดูเฉลย</button>
+    </form>
+
+    <div id="result" class="result-box">
+        <h3>ผลการทดสอบของคุณ</h3>
+        <span class="score-big" id="totalScoreDisplay">0 / 40</span>
+        <p>(คะแนนจากข้อกาและถูกผิด)</p>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <p>ตอนที่ 1 (ปรนัย): <span id="score1">0</span> / 30</p>
+        <p>ตอนที่ 2 (ถูกผิด): <span id="score2">0</span> / 10</p>
+        <p>ตอนที่ 3 (อัตนัย): 20 คะแนน <br><span style="font-size:0.8em; color:red;">(โปรดตรวจคำตอบจากแนวเฉลยด้านล่างด้วยตนเอง)</span></p>
+    </div>
+
+    <script>
+        // --- ข้อมูลข้อสอบ ---
+        const qPart1 = [
+            { q: "1. สาเหตุสำคัญที่สุดที่ทำให้ทรัพยากรธรรมชาติถูกทำลายคือข้อใด", c: ["ก. ภัยธรรมชาติ", "ข. การเพิ่มขึ้นของประชากรมนุษย์", "ค. การเปลี่ยนแปลงของสภาพอากาศ", "ง. การอพยพของสัตว์ป่า"], a: 1 },
+            { q: "2. ก๊าซชนิดใดที่มีปริมาณมากที่สุดในองค์ประกอบของอากาศ", c: ["ก. ออกซิเจน (O2)", "ข. คาร์บอนไดออกไซด์ (CO2)", "ค. ไนโตรเจน (N2)", "ง. อาร์กอน (Ar)"], a: 2 },
+            { q: "3. ก๊าซในข้อใดจัดเป็นก๊าซพิษที่มีอันตรายต่อระบบทางเดินหายใจ", c: ["ก. ไนโตรเจน", "ข. ออกซิเจน", "ค. คาร์บอนมอนอกไซด์ (CO)", "ง. ไอน้ำ"], a: 2 },
+            { q: "4. สาเหตุหลักของมลพิษทางอากาศในเขตกรุงเทพมหานครคือข้อใด", c: ["ก. การเผาไหม้เชื้อเพลิงจากยานพาหนะ", "ข. โรงงานอุตสาหกรรม", "ค. การก่อสร้าง", "ง. การเผาขยะในที่โล่ง"], a: 0 },
+            { q: "5. มลพิษในข้อใดเกิดจากกิจกรรมของมนุษย์โดยตรง", c: ["ก. ฝุ่นละอองจากภูเขาไฟระเบิด", "ข. ก๊าซมีเทนจากการผุพังของซากพืช", "ค. น้ำเสียจากการซักล้างและครัวเรือน", "ง. คลื่นความร้อนจากดวงอาทิตย์"], a: 2 },
+            { q: "6. ก๊าซชนิดใดมีคุณสมบัติ ไม่มีสี ไม่มีกลิ่น แต่มีความสามารถในการจับตัวกับฮีโมโกลบินได้ดีกว่าออกซิเจน", c: ["ก. ซัลเฟอร์ไดออกไซด์", "ข. คาร์บอนมอนอกไซด์", "ค. ไนโตรเจนไดออกไซด์", "ง. โอโซน"], a: 1 },
+            { q: "7. ปรากฏการณ์ฝนกรด (Acid Rain) เกิดจากก๊าซชนิดใดทำปฏิกิริยากับน้ำในบรรยากาศ", c: ["ก. คาร์บอนไดออกไซด์ และ มีเทน", "ข. ซัลเฟอร์ไดออกไซด์ และ ไนโตรเจนออกไซด์", "ค. คลอโรฟลูออโรคาร์บอน และ โอโซน", "ง. คาร์บอนมอนอกไซด์ และ ฝุ่นละออง"], a: 1 },
+            { q: "8. ข้อใดเป็นผลกระทบโดยตรงจากฝุ่นละออง PM 2.5", c: ["ก. โรคผิวหนัง", "ข. โรคระบบทางเดินหายใจและหลอดเลือดหัวใจ", "ค. โรคทางเดินอาหาร", "ง. โรคกระดูกพรุน"], a: 1 },
+            { q: "9. ข้อใด ไม่ใช่ แนวทางในการแก้ไขปัญหามลพิษทางอากาศ", c: ["ก. การใช้พลังงานสะอาด", "ข. การตรวจสอบสภาพเครื่องยนต์สม่ำเสมอ", "ค. การเผาตอซังข้าวเพื่อเตรียมหน้าดิน", "ง. การปลูกต้นไม้เพื่อดูดซับก๊าซพิษ"], a: 2 },
+            { q: "10. หลักการทำงานของระบบบำบัดอากาศแบบเปียก (Wet Scrubber) คือข้อใด", c: ["ก. ใช้ประจุไฟฟ้าดักจับฝุ่น", "ข. ใช้ถุงกรองกรองฝุ่นละออง", "ค. ใช้น้ำหรือของเหลวพ่นดักจับฝุ่นละอองและก๊าซพิษ", "ง. ใช้การเผาทำลายในอุณหภูมิสูง"], a: 2 },
+            { q: "11. การบริโภคโมโนโซเดียมกลูตาเมต (ผงชูรส) ในปริมาณมากเกินไป อาจก่อให้เกิดอาการใด", c: ["ก. โรคโลหิตจาง", "ข. กลุ่มอาการภัตตาคารจีน", "ค. โรคเบาหวาน", "ง. โรคนิ่วในถุงน้ำดี"], a: 1 },
+            { q: "12. สารมลพิษชนิดใดที่สามารถแย่งจับฮีโมโกลบินในเม็ดเลือดแดง ทำให้ร่างกายขาดออกซิเจน", c: ["ก. ก๊าซคาร์บอนไดออกไซด์", "ข. ก๊าซคาร์บอนมอนอกไซด์", "ค. ก๊าซซัลเฟอร์ไดออกไซด์", "ง. สารตะกั่ว"], a: 1 },
+            { q: "13. ข้อใดเป็นกลุ่มก๊าซเรือนกระจก (Greenhouse Gases) ทั้งหมด", c: ["ก. CO2, CH4, N2O, CFCs", "ข. CO2, O2, N2, Ar", "ค. CO, SO2, PM2.5, Pb", "ง. H2O, O3, He, N2"], a: 0 },
+            { q: "14. ผลกระทบต่อสิ่งแวดล้อมที่สำคัญจากการทำเกษตรเคมีคือข้อใด", c: ["ก. การเพิ่มขึ้นของโอโซนในชั้นบรรยากาศ", "ข. การปนเปื้อนของสารเคมีลงสู่แหล่งน้ำและดินเสื่อมโทรม", "ค. การลดลงของขยะพลาสติก", "ง. การเพิ่มพื้นที่ป่าไม้"], a: 1 },
+            { q: "15. คำย่อ EIA หมายถึงอะไร", c: ["ก. Environmental Impact Assessment", "ข. Health Impact Assessment", "ค. Environmental Area Analysis", "ง. Ecological Impact Area"], a: 0 },
+            { q: "16. องค์ประกอบของการประเมินผลกระทบสิ่งแวดล้อม (EIA) ประกอบด้วย 4 ด้าน คือข้อใด", c: ["ก. กายภาพ, เคมี, ชีวภาพ, สังคม", "ข. กายภาพ, ชีวภาพ, คุณค่าการใช้ประโยชน์ของมนุษย์, คุณค่าต่อคุณภาพชีวิต", "ค. ดิน, น้ำ, ลม, ไฟ", "ง. เศรษฐกิจ, สังคม, การเมือง, สิ่งแวดล้อม"], a: 1 },
+            { q: "17. โครงการประเภทใดที่ ต้อง จัดทำรายงาน EIA ตามกฎหมาย", c: ["ก. การสร้างบ้านพักอาศัย 1 หลัง", "ข. การสร้างเขื่อนกักเก็บน้ำขนาดใหญ่", "ค. การเปิดร้านขายของชำ", "ง. การทำสวนเกษตรอินทรีย์ขนาดเล็ก"], a: 1 },
+            { q: "18. ข้อใดคือประโยชน์ของการทำ EIA", c: ["ก. เพื่อให้โครงการได้รับการอนุมัติงบประมาณเพิ่มขึ้น", "ข. เพื่อป้องกันและลดผลกระทบต่อสิ่งแวดล้อมและชุมชน", "ค. เพื่อให้ผู้รับเหมาทำงานได้เร็วขึ้น", "ง. เพื่อยกเว้นภาษีอากร"], a: 1 },
+            { q: "19. การประเมินผลกระทบในด้าน 'คุณค่าการใช้ประโยชน์ของมนุษย์' เกี่ยวข้องกับเรื่องใด", c: ["ก. คุณภาพอากาศและเสียง", "ข. สัตว์ป่าและพรรณพืช", "ค. การใช้ประโยชน์ที่ดิน การคมนาคม และสาธารณูปโภค", "ง. ประวัติศาสตร์และโบราณคดี"], a: 2 },
+            { q: "20. ปะการังมีประโยชน์ต่อระบบนิเวศทางทะเลอย่างไร", c: ["ก. เป็นแหล่งอนุบาลสัตว์น้ำวัยอ่อนและป้องกันการกัดเซาะชายฝั่ง", "ข. เป็นแหล่งผลิตก๊าซมีเทน", "ค. ช่วยเพิ่มความเค็มให้กับน้ำทะเล", "ง. ช่วยลดระดับน้ำทะเลให้ต่ำลง"], a: 0 },
+            { q: "21. ข้อใด ใช่ หลักการบริหารจัดการสิ่งแวดล้อมที่ดี", c: ["ก. การกำจัดของเสียโดยการทิ้งลงทะเล", "ข. การใช้ทรัพยากรให้คุ้มค่าและเกิดของเสียน้อยที่สุด (Efficiency)", "ค. การผลิตสินค้าโดยไม่คำนึงถึงผลกระทบ", "ง. การใช้กฎหมายบังคับเพียงอย่างเดียวโดยไม่สร้างจิตสำนึก"], a: 1 },
+            { q: "22. แผนจัดการคุณภาพสิ่งแวดล้อมของประเทศไทย ฉบับปัจจุบันมุ่งเน้นเรื่องใดเป็นสำคัญ", c: ["ก. การเพิ่มผลผลิตอุตสาหกรรมสูงสุด", "ข. การเติบโตที่เป็นมิตรกับสิ่งแวดล้อม (Green Growth)", "ค. การนำเข้าขยะอิเล็กทรอนิกส์", "ง. การขยายพื้นที่เมืองโดยไม่จำกัด"], a: 1 },
+            { q: "23. หากแหล่งน้ำมีค่า BOD (Biochemical Oxygen Demand) สูง หมายความว่าอย่างไร", c: ["ก. น้ำสะอาดมาก มีออกซิเจนสูง", "ข. น้ำเน่าเสีย มีสารอินทรีย์ปนเปื้อนมาก", "ค. น้ำมีความเค็มสูง", "ง. น้ำมีสารพิษโลหะหนักเจือปน"], a: 1 },
+            { q: "24. ปัจจัยใดเป็นปัจจัยสำคัญด้านความพร้อมในการบริหารจัดการสิ่งแวดล้อม", c: ["ก. งบประมาณ บุคลากร และเทคโนโลยี", "ข. จำนวนประชากรที่มากที่สุด", "ค. การมีอาวุธยุทโธปกรณ์ทันสมัย", "ง. การมีพื้นที่ประเทศขนาดใหญ่"], a: 0 },
+            { q: "25. การจัดการทรัพยากรด้านกายภาพ หมายถึงการจัดการสิ่งใด", c: ["ก. ป่าไม้และสัตว์ป่า", "ข. ดิน น้ำ อากาศ และแร่ธาตุ", "ค. ชุมชนและวัฒนธรรม", "ง. สาธารณสุขและอนามัย"], a: 1 },
+            { q: "26. การจัดการด้านคุณภาพชีวิตในการทำ EIA พิจารณาเรื่องใด", c: ["ก. สภาพเศรษฐกิจ สังคม และสุขภาพอนามัยของชุมชน", "ข. ปริมาณน้ำฝนและอุณหภูมิ", "ค. ชนิดของแมลงในพื้นที่", "ง. ความแข็งแรงของโครงสร้างเขื่อน"], a: 0 },
+            { q: "27. คุณสมบัติของนักจัดการสิ่งแวดล้อมที่ดีควรเป็นอย่างไร", c: ["ก. ยึดถือความคิดตนเองเป็นใหญ่", "ข. มีวิสัยทัศน์ บูรณาการความรู้ได้ และมีธรรมภิบาล", "ค. มุ่งเน้นผลกำไรทางธุรกิจสูงสุด", "ง. ปฏิเสธเทคโนโลยีใหม่ๆ"], a: 1 },
+            { q: "28. ปรากฏการณ์ปะการังฟอกขาว เกิดจากสาเหตุหลักใด", c: ["ก. การจับปลามากเกินไป", "ข. อุณหภูมิน้ำทะเลสูงขึ้นจากภาวะโลกร้อน", "ค. ปริมาณเกลือในทะเลลดลง", "ง. การท่องเที่ยวทางเรือ"], a: 1 },
+            { q: "29. ข้อใดกล่าวถูกต้องเกี่ยวกับ EIA", c: ["ก. ทำหลังจากโครงการก่อสร้างเสร็จสิ้นแล้ว", "ข. เป็นการศึกษาเพื่อคาดการณ์ผลกระทบทั้งทางบวกและลบ", "ค. ทำเฉพาะโครงการของเอกชนเท่านั้น รัฐบาลไม่ต้องทำ", "ง. มีเป้าหมายเพื่อห้ามไม่ให้เกิดการพัฒนาใดๆ"], a: 1 },
+            { q: "30. ข้อใด ไม่ใช่ แนวทางการอนุรักษ์ทรัพยากรธรรมชาติที่ยั่งยืน", c: ["ก. การใช้ซ้ำ (Reuse)", "ข. การรีไซเคิล (Recycle)", "ค. การใช้แล้วทิ้ง (Single-use)", "ง. การฟื้นฟูสภาพ (Rehabilitation)"], a: 2 }
+        ];
+
+        const qPart2 = [
+            { q: "1. การจำแนกประเภทของสิ่งแวดล้อมได้เป็น 2 ประเภทใหญ่ๆ คือ สิ่งแวดล้อมทางชีวภาพ และกายภาพ", a: 1 },
+            { q: "2. ภาคอุตสาหกรรมและเกษตรกรรมล้วนส่งผลกระทบต่อสิ่งแวดล้อม", a: 1 },
+            { q: "3. โรคมินามาตะเกิดจากสารปรอท ส่วนโรคอิไต-อิไตเกิดจากสารแคดเมียม", a: 1 },
+            { q: "4. ก๊าซออกซิเจน (O2) คือก๊าซเรือนกระจกที่สำคัญที่สุดที่ทำให้โลกร้อน", a: 0 },
+            { q: "5. การแก้ปัญหาดินเค็มสามารถทำได้โดยการปลูกพืชทนเค็ม หรือใช้น้ำชะล้างเกลือ", a: 1 },
+            { q: "6. การเปลี่ยนแปลงสภาพภูมิอากาศ (Climate Change) เกิดจากภาวะโลกร้อน", a: 1 },
+            { q: "7. ภาวะโลกร้อน คือปรากฏการณ์ที่อุณหภูมิเฉลี่ยของโลกสูงขึ้นเนื่องจากภาวะเรือนกระจก", a: 1 },
+            { q: "8. สารอะฟลาทอกซิน (Aflatoxin) เป็นสารพิษจากเชื้อราที่เสี่ยงต่อการเกิดมะเร็งตับ", a: 1 },
+            { q: "9. ภาวะโลกร้อนส่งผลให้ระดับน้ำทะเลลดต่ำลง", a: 0 },
+            { q: "10. การพัฒนาภาคขนส่งมักส่งผลกระทบให้เกิดมลพิษทางอากาศและทางเสียง", a: 1 }
+        ];
+
+        const qPart3 = [
+            "1. องค์ประกอบของ 5R มีอะไรบ้าง คืออะไร หมายความว่าอย่างไร",
+            "2. จะประยุกต์ใช้หลัก 5R ในการดำเนินชีวิตอย่างไร",
+            "3. ลำดับขั้นในการจัดการของเสียคืออะไร",
+            "4. เสนอแนะตัวอย่างของการบูรณาการเพื่อบริหารจัดการสิ่งแวดล้อม (เลือกมลพิษ 1 อย่าง)"
+        ];
+
+        const guidlines3 = [
+            "<strong>แนวคำตอบ:</strong><br>1. Reduce (ลดการใช้)<br>2. Reuse (ใช้ซ้ำ)<br>3. Recycle (นำกลับมาใช้ใหม่/แปรรูป)<br>4. Repair (ซ่อมแซม)<br>5. Reject (ปฏิเสธของที่ทำลายโลก) หรือ Rethink (คิดใหม่)",
+            "<strong>แนวคำตอบ:</strong><br>ยกตัวอย่าง เช่น<br>- พกแก้วน้ำส่วนตัว/ถุงผ้า (Reduce/Reject)<br>- นำกล่องพัสดุมาใส่ของต่อ (Reuse)<br>- แยกขวดพลาสติกไปขาย (Recycle)<br>- ซ่อมเสื้อผ้าที่ขาดแทนการทิ้ง (Repair)",
+            "<strong>แนวคำตอบ:</strong><br>เรียงจากดีที่สุดไปแย่ที่สุด:<br>1. Prevention/Reduction (ลดการเกิด)<br>2. Reuse (ใช้ซ้ำ)<br>3. Recycling (นำกลับมาใช้ใหม่)<br>4. Recovery (การกู้คืนพลังงาน)<br>5. Disposal (การกำจัด/ฝังกลบ)",
+            "<strong>แนวคำตอบ:</strong><br>ตัวอย่างการจัดการ 'ขยะมูลฝอย' แบบบูรณาการ:<br>- ต้นทาง: ให้ความรู้ประชาชน + กฎหมายบังคับแยกขยะ<br>- กลางทาง: รถเก็บขยะที่มีประสิทธิภาพแยกประเภท<br>- ปลายทาง: โรงไฟฟ้าจากขยะ (Waste to Energy) หรือทำปุ๋ยหมัก"
+        ];
+
+        // --- Render Functions ---
+
+        function renderExam() {
+            // Part 1
+            let html1 = "";
+            qPart1.forEach((item, index) => {
+                html1 += `<div class="question-box">
+                    <div class="question-text">${item.q}</div>
+                    <div class="choices">`;
+                item.c.forEach((choice, cIndex) => {
+                    html1 += `<label id="p1q${index}_c${cIndex}"><input type="radio" name="p1q${index}" value="${cIndex}"> ${choice}</label>`;
+                });
+                html1 += `<div id="fb1q${index}" class="feedback"></div></div></div>`;
+            });
+            document.getElementById("part1-container").innerHTML = html1;
+
+            // Part 2
+            let html2 = "";
+            qPart2.forEach((item, index) => {
+                html2 += `<div class="question-box">
+                    <div class="question-text">${item.q}</div>
+                    <div class="choices">
+                        <label id="p2q${index}_c1"><input type="radio" name="p2q${index}" value="1"> ถูก (True)</label>
+                        <label id="p2q${index}_c0"><input type="radio" name="p2q${index}" value="0"> ผิด (False)</label>
+                    </div>
+                    <div id="fb2q${index}" class="feedback"></div>
+                </div>`;
+            });
+            document.getElementById("part2-container").innerHTML = html2;
+
+            // Part 3
+            let html3 = "";
+            qPart3.forEach((q, index) => {
+                html3 += `<div class="question-box">
+                    <div class="question-text">${q}</div>
+                    <textarea placeholder="พิมพ์คำตอบของคุณที่นี่..."></textarea>
+                    <div id="fb3q${index}" class="feedback guideline-box"></div>
+                </div>`;
+            });
+            document.getElementById("part3-container").innerHTML = html3;
+        }
+
+        function checkAnswers() {
+            let score1 = 0;
+            let score2 = 0;
+
+            // ตรวจตอนที่ 1
+            qPart1.forEach((item, index) => {
+                const selected = document.querySelector(`input[name="p1q${index}"]:checked`);
+                const fbDiv = document.getElementById(`fb1q${index}`);
+                const questionBox = fbDiv.parentElement.parentElement;
+                
+                // Reset styles
+                fbDiv.style.display = "block";
+                fbDiv.className = "feedback"; 
+
+                if (selected) {
+                    const userVal = parseInt(selected.value);
+                    
+                    if (userVal === item.a) {
+                        score1++;
+                        fbDiv.innerHTML = `<strong>✅ ถูกต้อง!</strong>`;
+                        fbDiv.classList.add("correct-answer-box");
+                        questionBox.style.borderLeftColor = "#27ae60"; // Green accent
+                    } else {
+                        fbDiv.innerHTML = `<strong>❌ ผิด!</strong> <br><span class="key-label">เฉลย:</span> ${item.c[item.a]}`;
+                        fbDiv.classList.add("wrong-answer-box");
+                        questionBox.style.borderLeftColor = "#c0392b"; // Red accent
+                        
+                        // Highlight wrong choice user selected
+                        document.getElementById(`p1q${index}_c${userVal}`).style.color = "red";
+                    }
+                    // Highlight correct answer
+                    document.getElementById(`p1q${index}_c${item.a}`).style.backgroundColor = "#d4edda";
+                    document.getElementById(`p1q${index}_c${item.a}`).style.fontWeight = "bold";
+                } else {
+                    fbDiv.innerHTML = `<strong>❌ ไม่ได้ตอบ!</strong> <br><span class="key-label">เฉลย:</span> ${item.c[item.a]}`;
+                    fbDiv.classList.add("wrong-answer-box");
+                    questionBox.style.borderLeftColor = "#f39c12"; // Orange accent
+                }
+            });
+
+            // ตรวจตอนที่ 2
+            qPart2.forEach((item, index) => {
+                const selected = document.querySelector(`input[name="p2q${index}"]:checked`);
+                const fbDiv = document.getElementById(`fb2q${index}`);
+                const questionBox = fbDiv.parentElement;
+                
+                fbDiv.style.display = "block";
+                fbDiv.className = "feedback";
+
+                if (selected) {
+                    const userVal = parseInt(selected.value);
+                    if (userVal === item.a) {
+                        score2++;
+                        fbDiv.innerHTML = `<strong>✅ ถูกต้อง!</strong>`;
+                        fbDiv.classList.add("correct-answer-box");
+                        questionBox.style.borderLeftColor = "#27ae60";
+                    } else {
+                        const correctText = item.a === 1 ? "ถูก" : "ผิด";
+                        fbDiv.innerHTML = `<strong>❌ ผิด!</strong> <br><span class="key-label">เฉลย:</span> ${correctText}`;
+                        fbDiv.classList.add("wrong-answer-box");
+                        questionBox.style.borderLeftColor = "#c0392b";
+                    }
+                } else {
+                    const correctText = item.a === 1 ? "ถูก" : "ผิด";
+                    fbDiv.innerHTML = `<strong>❌ ไม่ได้ตอบ!</strong> <br><span class="key-label">เฉลย:</span> ${correctText}`;
+                    fbDiv.classList.add("wrong-answer-box");
+                    questionBox.style.borderLeftColor = "#f39c12";
+                }
+            });
+
+            // เฉลยตอนที่ 3
+            qPart3.forEach((q, index) => {
+                const fbDiv = document.getElementById(`fb3q${index}`);
+                fbDiv.style.display = "block";
+                fbDiv.innerHTML = guidlines3[index];
+            });
+
+            // แสดงคะแนนรวม
+            document.getElementById("score1").innerText = score1;
+            document.getElementById("score2").innerText = score2;
+            document.getElementById("totalScoreDisplay").innerText = (score1 + score2) + " / 40";
+            document.getElementById("result").style.display = "block";
+            
+            // เลื่อนหน้าจอลงไปที่ผลคะแนน
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        // เริ่มรันข้อสอบ
+        renderExam();
+    </script>
+
+</body>
+</html>
